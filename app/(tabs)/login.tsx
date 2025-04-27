@@ -14,7 +14,8 @@ export default function LoginScreen() {
             if (!username || !password) {
                 return alert('Campos vacíos');
             }
-            const res = await fetch('http://tradeit.com/api/authentication/login', {
+            //la api ira en un subdominio
+            const res = await fetch('http://api.tradeit.es/api/authentication/login', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ username, password }),
