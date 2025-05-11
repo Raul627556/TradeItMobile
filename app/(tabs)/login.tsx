@@ -1,64 +1,148 @@
 import { useState } from 'react';
-import { View, Text, TextInput, Button, Alert, StyleSheet } from 'react-native';
+import {View, Text, TextInput, Image, TouchableOpacity, Alert, StyleSheet, Platform,} from 'react-native';
 import { router } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-
+import { Images } from '@/src/images';
 
 export default function LoginScreen() {
-    const [username, setUsername] = useState('');
+    const [identifier, setIdentifier] = useState('');
     const [password, setPassword] = useState('');
-   
-    
+
     const handleLogin = async () => {
         try {
-            if (!username || !password) {
-                return alert('Campos vacíos');
+            if (!identifier || !password) {
+                return Alert.alert('Error', 'Por favor completa todos los campos');
             }
-            //la api ira en un subdominio
-            const res = await fetch('http://api.tradeit.es/api/authentication/login', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username, password }),
-            });
+
+            const payload = { identifier, password };
+
+            const res = await fetch(
+                'http://api.tradeit.es/api/authentication/login',
+                {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',               // <-- para que el navegador/app guarde la cookie HttpOnly
+                    body: JSON.stringify(payload),
+                }
+            );
 
             const data = await res.json();
-            console.log('Response:', data);
-            console.log(res.ok)
+
             if (res.ok) {
-                alert('Inicio de sesión exitoso');
-                await AsyncStorage.setItem('userToken', data.token);    // Guarda el token en AsyncStorage
-                router.replace('/(authenticated)/home'); // Redirige a la pantalla de inicio después de iniciar sesión
+                // El servidor devuelve { message, accessToken }
+                await AsyncStorage.setItem('userToken', data.accessToken);
+                Alert.alert('¡Éxito!', data.message || 'Inicio de sesión correcto');
+                router.replace('/(authenticated)/home');
             } else {
-                Alert.alert('Error', data.message || 'Credenciales inválidas');
+                // El servidor devuelve { error: '...' }
+                Alert.alert('Error', data.error || 'Credenciales inválidas');
             }
         } catch (error) {
-            Alert.alert('Error de conexión', error instanceof Error ? error.message : 'Error desconocido');
+            Alert.alert(
+                'Error de conexión',
+                error instanceof Error ? error.message : 'Error desconocido'
+            );
         }
     };
 
     return (
-        <View style={styles.container}>
-            <Text style={styles.title}>Iniciar sesión</Text>
-            <TextInput
-                style={styles.input}
-                placeholder="Correo"
-                value={username}
-                onChangeText={setUsername}
-            />
-            <TextInput
-                style={styles.input}
-                placeholder="Contraseña"
-                value={password}
-                onChangeText={setPassword}
-                secureTextEntry
-            />
-            <Button title="Entrar" onPress={handleLogin} />
+        <View style={styles.outerContainer}>
+            <View style={styles.formContainer}>
+                <Image source={Images.logo} style={styles.logo} />
+
+                <Text style={styles.label}>Usuario o Email</Text>
+                <TextInput
+                    style={styles.input}
+                    placeholder="Ingresa usuario o correo electrónico"
+                    keyboardType={identifier.includes('@') ? 'email-address' : 'default'}
+                    autoCapitalize="none"
+                    value={identifier}
+                    onChangeText={setIdentifier}
+                />
+
+                <Text style={styles.label}>Contraseña</Text>
+                <TextInput
+                    style={styles.input}
+                    placeholder="Ingresa tu contraseña"
+                    secureTextEntry
+                    value={password}
+                    onChangeText={setPassword}
+                />
+
+                <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
+                    <Text style={styles.loginText}>Iniciar Sesión</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity onPress={() => router.push('/register')}>
+                    <Text style={styles.createAccount}>Crear cuenta</Text>
+                </TouchableOpacity>
+
+                <Text style={styles.terms}>
+                    Al continuar aceptas nuestros Términos y Condiciones y Política de
+                    Privacidad.
+                </Text>
+            </View>
         </View>
     );
 }
 
 const styles = StyleSheet.create({
-    container: { flex: 1, justifyContent: 'center', padding: 20 },
-    input: { borderWidth: 1, padding: 10, marginBottom: 10, borderRadius: 5 },
-    title: { fontSize: 24, textAlign: 'center', marginBottom: 20 },
+    outerContainer: {
+        flex: 1,
+        backgroundColor: '#fff',
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingHorizontal: 30,
+    },
+    formContainer: {
+        width: Platform.OS === 'web' ? '50%' : '100%',
+        maxWidth: 500,
+        alignSelf: 'center',
+    },
+    logo: {
+        width: 120,
+        height: 120,
+        marginBottom: 40,
+        alignSelf: 'center',
+    },
+    label: {
+        marginLeft: 5,
+        fontWeight: 'bold',
+        fontSize: 16,
+        marginTop: 10,
+    },
+    input: {
+        width: '100%',
+        borderColor: '#ccc',
+        borderWidth: 1,
+        borderRadius: 8,
+        padding: 12,
+        marginBottom: 10,
+    },
+    loginButton: {
+        backgroundColor: '#FF4B00',
+        padding: 15,
+        borderRadius: 8,
+        width: '100%',
+        alignItems: 'center',
+        marginTop: 10,
+    },
+    loginText: {
+        color: '#fff',
+        fontSize: 16,
+        fontWeight: '600',
+    },
+    createAccount: {
+        color: '#FF4B00',
+        fontWeight: '600',
+        marginTop: 15,
+        fontSize: 16,
+        textAlign: 'center',
+    },
+    terms: {
+        color: '#555',
+        fontSize: 12,
+        textAlign: 'center',
+        marginTop: 20,
+    },
 });
