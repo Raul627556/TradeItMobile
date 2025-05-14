@@ -30,7 +30,7 @@ export default function LoginScreen() {
             });
 
             const data = await res.json();
-
+            console.log('Login response:', data);
             if (res.ok) {
                 await login(data.accessToken); // 👈 usamos login del contexto
                 Alert.alert('¡Éxito!', data.message || 'Inicio de sesión correcto');
@@ -74,7 +74,7 @@ export default function LoginScreen() {
                     <Text style={styles.loginText}>Iniciar Sesión</Text>
                 </TouchableOpacity>
 
-                <TouchableOpacity onPress={() => router.push(Routes.register)}>
+                <TouchableOpacity onPress={() => router.push('/register')}>
                     <Text style={styles.createAccount}>Crear cuenta</Text>
                 </TouchableOpacity>
 

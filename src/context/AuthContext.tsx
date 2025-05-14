@@ -1,29 +1,77 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useEffect, useState } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-interface AuthContextType {
-    user: string | null;
-    login: (token: string) => Promise<void>;
-    logout: () => Promise<void>;
+// Ajusta según los campos reales de tu backend
+interface User {
+    id: string;
+    username: string;
+    email: string;
 }
 
-export const AuthContext = createContext<AuthContextType | undefined>(undefined);
+interface AuthContextType {
+    user: User | null;
+    login: (token: string) => Promise<void>;
+    logout: () => Promise<void>;
+    isLoading: boolean;
+}
+
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-    const [user, setUser] = useState<string | null>(null);
+    const [user, setUser] = useState<User | null>(null);
+    const [isLoading, setIsLoading] = useState(true);
 
-    // Se ejecuta una sola vez al iniciar la app
     useEffect(() => {
         const loadUser = async () => {
             const token = await AsyncStorage.getItem('userToken');
-            if (token) setUser(token);
+            if (!token) {
+                setIsLoading(false);
+                return;
+            }
+
+            try {
+                const res = await fetch('http://api.tradeit.es/api/authentication/me', {
+                    headers: { Authorization: `Bearer ${token}` },
+                    credentials: 'include',
+                });
+
+                if (res.ok) {
+                    const userData = await res.json();
+                    setUser(userData);
+                } else {
+                    await AsyncStorage.removeItem('userToken');
+                    setUser(null);
+                }
+            } catch (error) {
+                console.error('Error al cargar el usuario:', error);
+                setUser(null);
+            } finally {
+                setIsLoading(false);
+            }
         };
+
         loadUser();
     }, []);
 
     const login = async (token: string) => {
         await AsyncStorage.setItem('userToken', token);
-        setUser(token);
+
+        try {
+            const res = await fetch('http://api.tradeit.es/api/authentication/me', {
+                headers: { Authorization: `Bearer ${token}` },
+                credentials: 'include',
+            });
+
+            if (res.ok) {
+                const userData = await res.json();
+                setUser(userData);
+            } else {
+                setUser(null);
+            }
+        } catch (error) {
+            console.error('Error al hacer login:', error);
+            setUser(null);
+        }
     };
 
     const logout = async () => {
@@ -32,7 +80,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
 
     return (
-        <AuthContext.Provider value={{ user, login, logout }}>
+        <AuthContext.Provider value={{ user, login, logout, isLoading }}>
             {children}
         </AuthContext.Provider>
     );
@@ -40,6 +88,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
 export const useAuth = (): AuthContextType => {
     const context = useContext(AuthContext);
-    if (!context) throw new Error('useAuth must be used within AuthProvider');
+    if (!context) throw new Error('useAuth must be used within an AuthProvider');
     return context;
 };
