@@ -1,12 +1,18 @@
 import { useState } from 'react';
-import {View, Text, TextInput, Image, TouchableOpacity, Alert, StyleSheet, Platform,} from 'react-native';
+import {
+    View, Text, TextInput, Image, TouchableOpacity,
+    Alert, StyleSheet, Platform
+} from 'react-native';
 import { router } from 'expo-router';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useAuth } from '@/src/context/AuthContext';
 import { Images } from '@/src/images';
+import { Endpoints } from '@/src/constants/endpoints';
+import { Routes } from '@/src/constants/routes';
 
 export default function LoginScreen() {
     const [identifier, setIdentifier] = useState('');
     const [password, setPassword] = useState('');
+    const { login } = useAuth(); // 👈 usamos el hook aquí
 
     const handleLogin = async () => {
         try {
@@ -16,25 +22,20 @@ export default function LoginScreen() {
 
             const payload = { identifier, password };
 
-            const res = await fetch(
-                'http://api.tradeit.es/api/authentication/login',
-                {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    credentials: 'include',               // <-- para que el navegador/app guarde la cookie HttpOnly
-                    body: JSON.stringify(payload),
-                }
-            );
+            const res = await fetch(Endpoints.auth.login, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify(payload),
+            });
 
             const data = await res.json();
 
             if (res.ok) {
-                // El servidor devuelve { message, accessToken }
-                await AsyncStorage.setItem('userToken', data.accessToken);
+                await login(data.accessToken); // 👈 usamos login del contexto
                 Alert.alert('¡Éxito!', data.message || 'Inicio de sesión correcto');
-                router.replace('/(authenticated)/home');
+                router.replace('/(authenticated)/home'); // 👈 redirigimos después de login
             } else {
-                // El servidor devuelve { error: '...' }
                 Alert.alert('Error', data.error || 'Credenciales inválidas');
             }
         } catch (error) {
@@ -73,13 +74,12 @@ export default function LoginScreen() {
                     <Text style={styles.loginText}>Iniciar Sesión</Text>
                 </TouchableOpacity>
 
-                <TouchableOpacity onPress={() => router.push('/register')}>
+                <TouchableOpacity onPress={() => router.push(Routes.register)}>
                     <Text style={styles.createAccount}>Crear cuenta</Text>
                 </TouchableOpacity>
 
                 <Text style={styles.terms}>
-                    Al continuar aceptas nuestros Términos y Condiciones y Política de
-                    Privacidad.
+                    Al continuar aceptas nuestros Términos y Condiciones y Política de Privacidad.
                 </Text>
             </View>
         </View>

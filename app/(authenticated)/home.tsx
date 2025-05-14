@@ -1,6 +1,7 @@
 import { View, Text, Button, StyleSheet } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { router } from 'expo-router';
+import { AuthContext } from "@/src/context/AuthContext";
 
 export default function HomeScreen() {
   const handleLogout = async () => {
@@ -13,7 +14,7 @@ export default function HomeScreen() {
       <Text style={styles.title}>Bienvenido 👋</Text>
       <Text style={styles.subtitle}>Estás en la pantalla principal</Text>
 
-      <Button title="Cerrar sesión" onPress={handleLogout} />
+      <Button title="Cerrar sesión" onPress={AuthContext.} />
     </View>
   );
 }
