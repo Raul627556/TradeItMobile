@@ -1,20 +1,20 @@
 import { View, Text, Button, StyleSheet } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { router } from 'expo-router';
-import { AuthContext } from "@/src/context/AuthContext";
+import { useAuth } from "@/src/context/AuthContext"; // usa tu propio hook
 
 export default function HomeScreen() {
+  const { logout } = useAuth(); // ✅ así accedes correctamente a logout
+
   const handleLogout = async () => {
-    await AsyncStorage.removeItem('userToken');
-    router.replace('/login');
+    await logout(); // limpia AsyncStorage y contexto
+    router.replace('/login'); // redirige
   };
 
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Bienvenido 👋</Text>
       <Text style={styles.subtitle}>Estás en la pantalla principal</Text>
-
-      <Button title="Cerrar sesión" onPress={AuthContext.} />
+      <Button title="Cerrar sesión" onPress={handleLogout} />
     </View>
   );
 }

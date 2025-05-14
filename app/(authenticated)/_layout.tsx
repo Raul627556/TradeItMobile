@@ -1,15 +1,24 @@
-import { Slot, router } from 'expo-router';
-import { useAuth } from '@/src/context/AuthContext';
+import { Stack, router } from 'expo-router';
 import { useEffect } from 'react';
+import { useAuth } from '@/src/context/AuthContext';
+import { ActivityIndicator, View } from 'react-native';
 
 export default function AuthenticatedLayout() {
-  const { user } = useAuth();
+  const { user, isLoading } = useAuth();
 
   useEffect(() => {
-    if (!user) {
-      router.replace('/(tabs)/login');
+    if (!isLoading && !user) {
+      router.replace('/(tabs)/login'); // 🔐 Redirige si no hay usuario
     }
-  }, [user]);
+  }, [user, isLoading]);
 
-  return <Slot />;
+  if (isLoading || (!user && !isLoading)) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <ActivityIndicator size="large" />
+      </View>
+    );
+  }
+
+  return <Stack />;
 }
