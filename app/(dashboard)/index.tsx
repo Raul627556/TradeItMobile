@@ -1,7 +1,10 @@
 import { View, Text, Button, StyleSheet } from 'react-native';
 import { router } from 'expo-router';
 import { useAuth } from "@/src/context/AuthContext"; // usa tu propio hook
+// app/(tabs)/index.tsx
+export { default } from '../(tabs)/home';
 
+/*
 export default function HomeScreen() {
   const { logout } = useAuth(); // ✅ así accedes correctamente a logout
 
@@ -36,3 +39,4 @@ const styles = StyleSheet.create({
     color: '#666',
   },
 });
+*/

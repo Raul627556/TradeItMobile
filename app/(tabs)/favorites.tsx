@@ -5,6 +5,9 @@ import ParallaxScrollView from '@/components/ParallaxScrollView';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 
+export const unstable_settings = {
+    href: null,
+};
 export default function HomeScreen() {
   return (
     <ParallaxScrollView

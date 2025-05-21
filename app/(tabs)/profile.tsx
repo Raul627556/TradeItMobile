@@ -27,7 +27,7 @@ export default function LoginScreen() {
             <View style={styles.formContainer}>
                 <Image source={Images.logo} style={styles.logo} />
 
-                <Text style={styles.label}>Usuario o Email</Text>
+                <Text style={styles.label}>PERFIIIIL o Email</Text>
                 <TextInput
                     style={styles.input}
                     placeholder="Ingresa usuario o correo electrónico"

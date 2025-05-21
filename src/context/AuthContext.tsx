@@ -34,9 +34,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                     headers: { Authorization: `Bearer ${token}` },
                     credentials: 'include',
                 });
-
                 if (res.ok) {
                     const userData = await res.json();
+                    console.log('User data:', userData);
                     setUser(userData);
                 } else {
                     await AsyncStorage.removeItem('userToken');
